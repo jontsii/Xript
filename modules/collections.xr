@@ -1,0 +1,100 @@
+use RamManager;
+use Utils;
+
+class List {
+
+    any* data;
+    Type type;
+
+    mt List init(Type t, any[] new = noll) {
+        type = t;
+        data = Ram.alloc(Ram.size(t) * ArrayUtils.getLength(*data)); //allocate data
+        *data = new;
+    }
+    mt noll add(type data) {
+        int len = ArrayUtils.getLength(*data);
+        data = Ram.Alloc(Ram.size(type) * len + 1);
+        data[len] = data;
+    }
+    mt noll remove(int i) {
+        data.modify(i, noll)
+        type* temp = data;
+        data = Ram.alloc(Ram.size(type) * ArrayUtils.getLength(*data) - 1); //dont allocate the noll
+        //works because if you assign data to a pointer that is not big enough, it removes all values that is noll, in this case the noll is i
+        *data = *temp(i); //i represents the index the noll is wanted to be removed
+    }
+    mt noll modify(int i, type newval) {
+        data[i] = newval;
+    }
+    mt int getLength() {
+        return ArrayUtils.getLength(*data);
+    }
+    mt bool has(type x) {
+        for (type y in *data) {
+            if (x == y) {
+                return true;
+            }
+        }
+        return false;
+    }
+    mt int getIndex(type x) {
+        return ArrayUtils.getIndex(*data, x);
+    }
+    mt type get(int i) {
+        return data[i];
+    }
+}
+class Array { //this is the base datatype, arrayUtils is found in utils.xr
+    any[] data;
+    Type type;
+
+    mt Array init(Type t, any[] new = noll) {
+        type = t;
+        data = cast(data, t);
+        data = Ram.stackAlloc(Ram.size(t) * ArrayUtils.getLength(new));
+        *data = new;
+    }
+
+}
+
+class Dictionary {
+
+    List(any) keys;
+    List(any) values;
+
+    mt Dictionary init(Type keyType, Type valueType) {
+        keys = List(keyType);
+        values = List(valueType);
+    }
+    mt noll add(keys.type newKey, values.type newval) {
+        keys.add(newKey);
+        values.add(newval)
+    }
+    mt noll remove(keys.type key) {
+        int i = keys.getIndex(key);
+        keys.remove(i);
+        values.remove(i);
+    }
+    mt noll modify(keys.type key, values.type newval) {
+        int i = keys.getIndex(key);
+        values.modify(i, newval);
+    }
+    mt int getLength() {
+        return keys.getLength();
+    }
+    mt values.type get(keys.type key) {
+        return values.get(keys.getIndex(key));
+    }
+    mt noll setData(Dictionary x) {
+        keys = x.keys;
+        values = x.values;
+    }
+    mt bool has(keys.type key) {
+        if (keys.has(key)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}

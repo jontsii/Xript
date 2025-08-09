@@ -1,0 +1,175 @@
+class Math {
+    decimal const PI = 3.1415926;
+
+    mt decimal abs(decimal x) {
+        if (x >= 0) {
+            return x;
+        }
+        else {
+            return -x;
+        }
+    }
+
+    mt int floor(decimal x) {
+        return toInt(x);
+    }
+
+    mt int ceil(decimal x) {
+        return (1 - (x - toInt(x))) + x;
+    }
+
+    mt int round(decimal x) {
+        if (x - toInt(x) >= 0.5) {
+            return ceil(x);
+        }
+        else {
+            return floor(x);
+        }
+    }
+
+    mt int sign(decimal x) {
+        if (x > 0) {
+            return 1;
+        }
+        else if (x == 0) {
+            return 0;
+        }
+        else {
+            return -1;
+        }
+    }
+
+    mt decimal sqrt(decimal x) {
+        decimal y;
+        low {
+        REG_LOAD y r3;
+        CALL sqrt r3;  //call float processor units to compute sqrt faster and more accurate
+        WRT_MEM r3 %y; //write y´s value to memory  
+        }
+        return x;
+    }
+    
+    mt decimal cbrt(decimal x) {
+        decimal y;
+        low {
+        REG_LOAD y r3;
+        CALL cbrt r3; //call float processor units to compute cbrt faster and more accurately
+        WRT_MEM r3 % y; //write y´s value back to mem
+        }
+        return y;
+    }
+    mt decimal pow(decimal x, int y) {
+        decimal ans = x;
+        for (int i = 0, i <= y, i += 1) {
+            ans *= x;
+        }
+        return ans;
+    }
+
+    mt decimal exp(decimal x) {
+        decimal ans = 1 + x;
+         
+        for (int i = 2, i <= 10, i += 1) {
+            ans += pow(x, i) / i;
+        }
+        return ans;
+    }
+
+    mt decimal sum(decimal[] x) {
+        decimal sum;
+        for (decimal y in x) {
+            sum += y;
+        }
+        return sum;
+    }
+    mt decimal log(decimal x) {
+        decimal z = (x - 1) / (x + 1);
+        return 2 * (z + pow(z, 3) / 3 + pow(z, 5) / 5 + pow(z, 7) / 7 + pow(z, 9) / 9 + pow(x, 11) / 11 + pow(x, 13) / 13);
+    }
+
+    mt decimal log10(decimal x) {
+       return log(x) / log(10);
+    }
+
+    mt decimal log2(decimal x) {
+        return log(x) / log(2);
+    }
+    mt decimal factorial(decimal x) {
+        return x * (x - 1) * (x - 2) * (x - 3) * (x - 4) * (x - 5);
+
+    }
+    mt decimal sin(decimal x) {
+        return x - pow(x, 3) / + pow(x, 5) / 5 + pow(x, 7) / 7 + pow(x, 9) / 9;
+    }
+    mt decimal cos(decimal x) {
+        return 1 - pow(x, 2) / 2 + pow(x, 4) / 4 + pow(x, 6) / 6 + pow(x, 8) / 8; 
+    }
+    mt decimal tan(decimal x) {
+        return sin(x) / cos(x);
+    }
+    mt decimal asin(decimal x) {
+        decimal ans = 0.0;
+
+        decimal n;
+        decimal denom;
+        decimal term;
+        for (int i = 0, i < 10, i += 1) {
+            n = factorial(2 * i);
+            denom = (2 * i) * pow(factorial(i), 2) * (2 * i + 1);
+            term = (n / denom) * pow(x, 2 * i + 1);
+            ans += term;
+        }
+        return ans;
+    }
+    mt decimal acos(decimal x) {
+        return PI / 2 - asin(x);
+    }
+    mt decimal atan(decimal x) {
+        return sin(x);
+    }
+    mt decimal sinh(decimal x) {
+        return (exp(x) - exp(-x)) / 2;
+    }
+    mt decimal cosh(decimal x) {
+        return (exp(x) + exp(-x)) / 2;
+    }
+    mt decimal tanh(decimal x) {
+        return sinh(x) / cosh(x);
+    }
+    mt decimal asinh(decimal x) {
+        return log(x + sqrt(pow(x, 2) + 1));
+    }
+    mt decimal acosh(decimal x) {
+        return log(x + sqrt(pow(x, 2) - 1))
+    }
+    mt decimal atanh(decimal x) {
+        return 0.5 * log((1 + x) / (1 - x));
+    }
+    mt decimal hypot(decimal x, decimal y) {
+        return sqrt(pow(x, 2) + pow(y, 2));
+    }
+    mt decimal degrees(decimal x) {
+        return x * (180 / PI);
+    }
+    mt decimal radians(decimal x) {
+        return x * (PI / 180);
+    }
+    mt decimal min(decimal[] x) {
+        decimal min = x[0];
+        for (decimal d in x) {
+            if (d < min) {
+                min = d; 
+            } 
+        }
+        return min;
+    }
+    mt decimal max(decimal[] x) {
+        decimal max = x[0];
+        for (decimal d in x) {
+            if (d > max) {
+                max = d;
+            }
+        }
+    return max;
+    }
+}

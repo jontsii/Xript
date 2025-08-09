@@ -1,0 +1,125 @@
+static class ArrayUtils {
+    mt int getIndex(any[] a, any val) { //any is the eqivalent of a void* tho its not a pointer. Used for unknown types
+        for (int i = 0, i <= getLength(a), i += 1) {
+            if (a[i] == val) {
+                return i;
+            }
+        }
+    }
+    mt int getLength(any[] a) { 
+        int counter = 0;
+        for (any b in a) {
+            if (type(b) == ARR_TERMINATOR) { //ARR_TERMINATOR is a vval and is at the end of every array. All arrays are stored as pointers in memory.
+                return i;
+            }
+        }
+    }
+    mt noll clear(any[] a) {
+        *a = noll;
+    }
+    mt any[] createCopy(any[] src) {
+        any[getLength(src)] b;
+        *b = *src;
+        return b;
+    }
+    mt bool has(any[] a, any val) {
+        for (any b in a) {
+            if (b == val) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+static class StringUtils { //has a lot of utilities for the type string
+
+    char[100] chars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', '|', '/', '`', '*', '?', '~', '_', '.', '^', '+', '{', '(', '[', ':', '&',
+                       '\'', ']', ',', '-', ')', '@', '<', '\""', ';', '>', '\\', '#', '!', '$', '}', '%'};  
+    
+    mt int getLength(string x) {
+        int counter = 0;
+        for (char c in x) {
+            if (c == '\0') {
+                return counter;
+            }
+            counter += 1;
+        }
+    }
+    mt noll replace(string x, string toReplace, string replacement) {
+        int index = getIndex(a, toReplace);
+        int j = 0; //j is used for indexing replacement
+        for (int i = index, i <= getLen(toReplace), i += 1) {
+            x[i] = replacement[j];
+        }
+    }
+    mt noll capitalize(string x) {
+        x[0] = chars[ArrayUtils.getIndex(chars, x[0]) + 26];
+    }
+    mt noll upper(string x) {
+        for (char c in x) {
+            if (ArrayUtils.getIndex(chars, c) <= 25) {
+                x[ArrayUtils.getIndex(x, c)] = chars[ArrayUtils.getIndex(chars, c) + 26];
+            }
+        }
+    }
+    mt noll lower(string x) {
+        for (char c in x) {
+            if (ArrayUtils.getIndex(chars, c) >= 25) {
+                x[ArrayUtils.getIndex(x, c)] = chars[ArrayUtils.getIndex(chars, c) - 26];
+            }
+        }
+    }
+    mt bool has(string x, char c) {
+        for (char a in x) {
+            if (a == c) {
+                return true;
+            }
+        }
+    }
+    mt int getIndex(string x, string y) {
+        int counter = 0;
+
+        for (int i = 0, i <= getLen(x), i += 1) {
+            if (x[i] == y[0]) {
+                for (int j = 1, i <= getLen(xy, j += 1) {
+                    if (x[i] == y[i]) {
+                        counter += 1;
+                    }
+                }
+
+                if (counter == getLen(x)) {
+                    return i;
+                }
+            }
+        }
+        return -1; //-1 means index was not found
+    }
+    mt string[] split(string x, char c) {
+        string[] ans = string[count(x, c)];
+        string temp = "";
+
+        int i = 0;
+        for (char a in x) {
+            if (a != c) {
+                temp += c;
+            }
+            else {
+                ans[i] = temp;
+                temp = "";
+            }
+        }
+        return ans;
+    }
+    mt int count(string x, char c) {
+        int counter = 0;
+        for (char a in x) {
+            if (a == c) {
+                counter += 1;
+            }
+        }
+        return counter;
+    }
+}

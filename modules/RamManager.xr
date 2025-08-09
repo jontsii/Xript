@@ -1,0 +1,63 @@
+use Utils;
+
+static class Ram {
+
+    mt any* alloc(int size) {
+        low {
+            REG_LOAD new ptr ptr;
+            SYS_CALL "allocHeapMem" size r3;
+            WRT_MEM r3 ptr;
+        }
+        return ptr;
+    }
+    mt any* stackAlloc(int size) {
+        low {
+            REG_LOAD new ptr ptr;
+            SYS_CALL "allocStackMem" size r3;
+            WRT_MEM r3 ptr;
+        }
+        return ptr;
+    }
+    mt any* free(any* obj) {
+        low {
+            REG_LOAD obj r3;
+            SYS_CALL "free" r3;
+        }
+    }
+    mt int size(any obj) {
+        Dictionary sizes = Dictionary(string, int);
+        sizes.setData({"int": 4, "char": 1, "bool": 1, "string": -1, "noll": 0, "decimal": 8, "float": 4});
+        int totalObjs = 0;
+        int totalSize = 0;
+        if (sizes.has(Type.typeof(obj))) {
+            for (any x in obj.properties) {
+                if (size.has(Type.typeof(x))) {
+                    totalSize += sizes.get(Type.typeof(obj));
+                }
+                else {
+                    if (!ArrayUtils.has(x.properties, Type.typeof(obj))) {
+                        totalSize += size(x);
+                    }
+                    else {
+                        totalObjs += 1;
+                    }
+            }
+            totalSize += totalSize * totalObjs;
+            return totalSize;
+        }
+        else {
+            return sizes.get(Type.typeof(obj));
+        }
+    }
+}
+class Type {
+
+    string name;
+
+    mt Type init(string typeName) {
+        name = typeName;
+    }
+    static mt string typeof(any data) {
+        return data.type.name;
+    }
+}

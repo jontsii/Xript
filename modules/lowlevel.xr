@@ -1,0 +1,3 @@
+//these dictionaries are for syscalls. For custom OSes, you need to build a new dictonary with all the syscalls, so that same functions can be used
+Dictionary unixSyscalls = Dictionary(string, string);
+Dictionary windowsSyscalls = Dictionary(string, string);

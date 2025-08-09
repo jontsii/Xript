@@ -1,0 +1,2 @@
+//this file has things that can provide runtime info. Info can be form the JIT compiler and VM.
+//THIS FILE SHOULD ONLY BE USED IF THE APP RUNS ON THE VMJIT VERSION OF XRIPT, SO IF YOU ARE USING AOT DON´T USE THIS?????
