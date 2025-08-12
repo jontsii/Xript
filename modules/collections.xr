@@ -13,7 +13,7 @@ class List {
     }
     mt noll add(type data) {
         int len = ArrayUtils.getLength(*data);
-        data = Ram.Alloc(Ram.size(type) * len + 1);
+        data = Ram.alloc(Ram.size(type) * len + 1);
         data[len] = data;
     }
     mt noll remove(int i) {

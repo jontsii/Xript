@@ -1,0 +1,71 @@
+/*graphics drawing requires these things from the drivers:
+    - a framebuffer
+    - memory control APIs (free, allocate, copy)
+    - launching and using threads / blocks
+*/
+use gpu.GPULibMain;
+use RamManager;
+
+fn int getRGB(int r, int g, int b) {
+    return r * g * b;
+}
+fn int getARGB(int a, int r, int g, int b) {
+    return a * r * g * b;
+}
+class Texture {
+
+    int[][] data;
+
+    mt Texture init(int[] txtr, int width, int height) { //no GPU acceleration needed, estimatedly, this can make 29 000 Textures per second on i5 12400f (at max perfromance)
+        int[][] temp = int[width][height]; 
+        
+        for (int i = 0, i < width, i += 1) {
+            for (int j = 0, j < height, j += 1) {
+                if (i == 0) int index = i + height + j;
+                else int index = i * height + j;
+                
+                temp[i][j] = txtr[index];
+            }
+        }
+        data = temp;
+    }
+}
+class TextureData { //Frame class accepts this 
+    Texture t;
+    int[] data;
+    float stretchAmount;
+
+    mt TextureData init(Texture txtr, int x, int y, int angle, int stretchDir, float strecth) {
+        t = txtr;
+        data[0] = x;
+        data[1] = y;
+        data[2] = angle;
+        data[3] = stretchDir;
+        stretchAmount = strecth;
+    }
+}
+enum shaderFormat = {SPIR-V, GSLS}
+class Frame {
+    TextureData[] textures;
+    int[] data;
+    string target;
+    string* shdrs;
+    shaderFormat frmt;
+
+    mt Frame init(TextureData[] txtrs, int height, int width, string targetWindow, string* shaders, shaderFormat format) {
+        textures = txtrs;
+        data[0] = height;
+        data[1] = width;
+        target = targetWindow;
+        shdrs = shaders;
+        frmt = format;
+    }
+}
+static class GraphicsSerializer {
+    mt int* serializeToFrameBuffer(Frame f) {
+        int* framebuffer = GPUAlloc(f.data[0] * f.data[1] * Ram.size(int));
+        gpu (f.data[0] * f.data[1]) {
+            
+        }
+    }
+}
