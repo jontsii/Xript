@@ -1,0 +1,7 @@
+use gpu.graphics.GraphicsObjects;
+fn noll passToFramebuffer(int* f) {
+    low {
+        REG_LOAD f r4;
+        syscall "PassFrameBufferToDriver" r4;
+    }
+}

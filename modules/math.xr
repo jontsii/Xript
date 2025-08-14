@@ -84,6 +84,7 @@ class Math {
     }
     mt decimal log(decimal x) {
         decimal z = (x - 1) / (x + 1);
+
         return 2 * (z + pow(z, 3) / 3 + pow(z, 5) / 5 + pow(z, 7) / 7 + pow(z, 9) / 9 + pow(x, 11) / 11 + pow(x, 13) / 13);
     }
 
@@ -144,6 +145,26 @@ class Math {
     }
     mt decimal atanh(decimal x) {
         return 0.5 * log((1 + x) / (1 - x));
+    }
+    mt decimal atan2(decimal x, decimal y) {
+        if (x == 0 && y == 0) {
+            return 0;
+        }
+        else if (x == 0 && y < 0) {
+            return -(Pi / 2);
+        }
+        else if (x == 0 && y > 0) {
+            return PI / 2;
+        }
+        else if (x < 0 && y < 0) {
+            return atan(y / x) - PI;
+        }
+        else if (x < 0 && y > 0) {
+            return atan(y / x) + PI;
+        }
+        else if (x > 0) {
+            return atan(y / x);
+        }
     }
     mt decimal hypot(decimal x, decimal y) {
         return sqrt(pow(x, 2) + pow(y, 2));

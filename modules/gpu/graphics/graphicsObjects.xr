@@ -1,16 +1,14 @@
 /*graphics drawing requires these things from the drivers:
     - a framebuffer
     - memory control APIs (free, allocate, copy)
-    - launching and using threads / blocks
 */
 use gpu.GPULibMain;
 use RamManager;
+use Utils;
 
-fn int getRGB(int r, int g, int b) {
-    return r * g * b;
-}
-fn int getARGB(int a, int r, int g, int b) {
-    return a * r * g * b;
+fn int getRGB(int r, int g, int b, int* dest) { //needs to be GPU accelerated for making pics faster
+    int i = getThreadIndex();
+    dest[i] = r * g * b;
 }
 class Texture {
 
@@ -23,7 +21,6 @@ class Texture {
             for (int j = 0, j < height, j += 1) {
                 if (i == 0) int index = i + height + j;
                 else int index = i * height + j;
-                
                 temp[i][j] = txtr[index];
             }
         }
@@ -35,37 +32,42 @@ class TextureData { //Frame class accepts this
     int[] data;
     float stretchAmount;
 
-    mt TextureData init(Texture txtr, int x, int y, int angle, int stretchDir, float strecth) {
+    mt TextureData init(Texture txtr, int x, int y) {
         t = txtr;
         data[0] = x;
         data[1] = y;
-        data[2] = angle;
-        data[3] = stretchDir;
-        stretchAmount = strecth;
     }
 }
-enum shaderFormat = {SPIR-V, GSLS}
 class Frame {
     TextureData[] textures;
     int[] data;
+    int backColor;
     string target;
-    string* shdrs;
-    shaderFormat frmt;
 
-    mt Frame init(TextureData[] txtrs, int height, int width, string targetWindow, string* shaders, shaderFormat format) {
+    mt Frame init(TextureData[] txtrs, int height, int width, string targetWindow, int background) {
         textures = txtrs;
         data[0] = height;
         data[1] = width;
         target = targetWindow;
-        shdrs = shaders;
-        frmt = format;
+        backColor = background;
     }
 }
-static class GraphicsSerializer {
+
+static class FrameSerializer {
     mt int* serializeToFrameBuffer(Frame f) {
-        int* framebuffer = GPUAlloc(f.data[0] * f.data[1] * Ram.size(int));
-        gpu (f.data[0] * f.data[1]) {
-            
+        
+        int* framebuffer = GPUAlloc(sizeof(int) * f.data[0] * f.data[1]);
+        
+        gpu (ArrayUtils.getLength(f.textures)) {
+            int i = getThreadIndex();
+            TextureData txtr = f.textures[i];
+
+            for (int j = 0, j < txtr.data[0] * txtr.data[1], j += f.width) { // j means the row it´s going
+                for (int k = txtr.data[0], k < f.width, k += 1) {
+                    framebuffer[f.width * j + k] = txtr.t[k - txtr.data[0]];
+                }
+            }
         }
+        return framebuffer;
     }
 }
