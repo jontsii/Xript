@@ -1,0 +1,8 @@
+use networking.UDP.sender;
+
+class TCPSender ++ UDPSender { //no need to do anything other than this
+
+    mt TCPSender init(int domain) {
+        parent.init(domain, SOCK_STREAM);
+    }
+}

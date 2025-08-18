@@ -1,0 +1,15 @@
+use networking.TCP.sender;
+
+class HTTPSender ++ TCPSender {
+    mt HTTPSender init() ++ parent.init {
+        parent.init(1);
+    }
+    mt async noll sendAsync(string msg, string target) {
+        int backLog;
+        parent.sendAsync(msg, target, backLog);
+    }
+    mt noll send(string msg, string target) {
+        int backLog;
+        parent.send(msg, target, backLog);
+    }
+}

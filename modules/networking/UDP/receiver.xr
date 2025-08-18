@@ -1,0 +1,76 @@
+use lowLevel;
+enum addrFamily = {IPv4, IPv6};
+enum protocol = {SOCK_STREAM, SOCK_DGRAM};
+
+class UDPReceiver {
+    int socket;
+    int port;
+    
+    mt UDPReceiver init(int domain, protocol a) {
+        int sockNum;
+        low {
+            REG_LOAD r3 domain;
+            syscall "CreateSocket" r3, a, 0, %sockNum; //1 for UDP, 0 for TCP
+        }
+        socket = sockNum;
+    }
+    mt noll bind(addrFamily type, int port, string address) {
+        low {
+            syscall "BindSocket" socket, byteSwap(port), address;
+        }
+    }
+    mt async string listenAsync(int backLog) {
+        string data;
+        low {
+            REG_LOAD r3 socket;
+            syscall "ListenToSocket" r3 backLog;
+        }
+        //Accept the connection
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 port;
+            syscall "AcceptConnection" r3 r4 32;
+        }
+        //receive
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 %data;
+            REG_LOAD r5 32;
+            REG_LOAD r6 noll;
+            REG_LOAD r7 noll;
+            REG_LOAD r8 0;
+            syscall "ReceiveFromSocket" r3 r4 r5 r6 r7 r8;
+        }
+        return data;
+    }
+    mt string listen(int backLog) {
+        string data;
+        low {
+            REG_LOAD r3 socket;
+            syscall "ListenToSocket" r3 backLog;
+        }
+        //Accept the connection
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 port;
+            syscall "AcceptConnection" r3 r4 32;
+        }
+        //receive
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 %data;
+            REG_LOAD r5 32;
+            REG_LOAD r6 noll;
+            REG_LOAD r7 noll;
+            REG_LOAD r8 0;
+            syscall "ReceiveFromSocket" r3 r4 r5 r6 r7 r8;
+        }
+        return data;
+    }
+    mt noll close() {
+        low {
+            REG_LOAD r3 socket;
+            syscall "CloseSocket" r3;
+        }
+    }
+}

@@ -1,0 +1,51 @@
+use lowLevel;
+enum addrFamily = {IPv4, IPv6};
+
+class UDPSender {
+    int socket;
+    int port;
+    
+    mt UDPReceiver init(int domain, vval) {
+        int sockNum;
+        low {
+            REG_LOAD r3 domain;
+            syscall "CreateSocket" r3, vval, 0, %sockNum;
+        }
+        socket = sockNum;
+    }
+    mt noll bind(addrFamily type, int port, string address) {
+        low {
+            syscall "BindSocket" socket byteSwap(port) address;
+        }
+    }
+    mt async noll sendAsync(string msg, string target, int backLog) {
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 %target;
+            REG_LOAD r5 32;
+            REG_LOAD r6 noll;
+            REG_LOAD r7 noll;
+            REG_LOAD r8 0;
+            REG_LOAD r9 %msg;
+            syscall "SendToSocket" r3 r4 r5 r6 r7 r8 r9;
+        }
+    }
+    mt noll send(string msg, string target, int backLog) {
+        low {
+            REG_LOAD r3 socket;
+            REG_LOAD r4 %data;
+            REG_LOAD r5 32;
+            REG_LOAD r6 noll;
+            REG_LOAD r7 noll;
+            REG_LOAD r8 0;
+            REG_LOAD r9 %msg;
+            syscall "SendToSocket" r3 r4 r5 r6 r7 r8 r9;
+        }
+    }
+    mt noll close() {
+        low {
+            REG_LOAD r3 socket;
+            syscall "CloseSocket" r3;
+        }
+    }
+}

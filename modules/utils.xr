@@ -30,6 +30,15 @@ static class ArrayUtils {
         }
         return false;
     }
+    mt noll reverse(any[] a) {
+        a.type[getLength(a)] b;
+        int j = 0;
+        for (int i = getLength(a), i >= 0, i -= 1) {
+            b[j] = a[i];
+            j += 1
+        }
+        a = b;
+    }
 }
 
 static class StringUtils { //has a lot of utilities for the type string
