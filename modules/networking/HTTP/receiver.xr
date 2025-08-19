@@ -1,20 +1,19 @@
 use networking.TCP.receiver;
 
-class HTTPReceiver ++ TCpReceiver {
+class HTTPReceiver ++ TCPReceiver {
     mt HTTPReceiver init() ++ parent.init {
         parent.init(1, SOCK_STREAM);
     }
-    mt async string listenAsync() {
-        parent.bind(addrFamily.IPv4, 80, ANY);
+    mt async string listenAsync(addrFamily ipVersion) {
+        parent.bind(ipVersion, 80, ANY);
         int backLog;
         string data = await parent.listenAsync(backLog);
         return data;
     }
-    mt string listen() {
-        parent.bind(addrFamily.IPv4, 80, ANY);
+    mt string listen(addrFamily ipVersion) {
+        parent.bind(ipVersion, 80, ANY);
         int backLog;
         string data = parent.listen(backLog);
         return data;
     }
-    
 }

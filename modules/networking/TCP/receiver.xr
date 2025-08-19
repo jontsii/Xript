@@ -3,6 +3,6 @@ enum protocol = {SOCK_STREAM, SOCK_DGRAM};
 
 class TCPReceiver ++ UDPReceiver {
     mt TCPReceiver init(int domain) ++ parent.init {
-        parent.init(domain, protocol.SOCK_STREAM)
+        parent.init(domain, protocol.SOCK_STREAM);
     }
 }

@@ -1,19 +1,20 @@
 use lowLevel;
 enum addrFamily = {IPv4, IPv6};
+enum protocol = {SOCK_STREAM, SOCK_DGRAM};
 
 class UDPSender {
     int socket;
     int port;
     
-    mt UDPReceiver init(int domain, vval) {
+    mt UDPReceiver init(int domain, protocol p) {
         int sockNum;
         low {
             REG_LOAD r3 domain;
-            syscall "CreateSocket" r3, vval, 0, %sockNum;
+            syscall "CreateSocket" r3, p, 0, %sockNum;
         }
         socket = sockNum;
     }
-    mt noll bind(addrFamily type, int port, string address) {
+    mt noll bind(int port, string address) {
         low {
             syscall "BindSocket" socket byteSwap(port) address;
         }
