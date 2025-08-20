@@ -1,0 +1,32 @@
+use Collections;
+
+class Thread {
+    fnPtr fn;
+    int thread;
+
+    mt Thread init(fnPtr x) {
+        fn = x;
+        createThread();
+    }
+    priv mt noll createThread() {
+        low {
+            syscall "createThread" r3;
+            WRT_MEM r3 %thread;
+            SPILL_REG;
+        }
+    }
+    mt noll start() {
+        low {
+            syscall "startThread" thread;
+        }
+        fn();
+    }
+    mt noll join() {
+        //compiler knows the sychronization
+    }
+    mt noll exit() {
+        low {
+            syscall "exitThread" thread;
+        }
+    }
+}
