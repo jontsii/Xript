@@ -1,0 +1,67 @@
+use Collections;
+
+fn noll writeCommandLine(string command) {
+    low {
+        REG_LOAD r1 %commmand;
+        syscall "runCommandLine" r1;
+        SPILL_REG r1;
+    }
+}
+
+fn FnPtr* requestSharedLib(string path) {
+    low {
+        REG_LOAD fncs r2 %;
+        REG_LOAD r1 %path;
+        syscall "openShrdLib" r1 r2;
+        SPILL_REG r1;
+    }
+    return fncs;
+}
+
+fn FnPtr getProcAddr(string name, FnPtr[] fptrs) {
+    for (FnPtr x in fptrs) {
+        if (x.name == name) {
+            return x;
+        }
+    }
+    else {
+        return noll;
+    }
+}
+fn string getOSName() {
+    #ct agnostic
+    return getName();
+}
+fn string getOSVersion() {
+    #ct agnostic
+    return getVersion();
+}
+fn string getUser() {
+    #ct agnostic
+    return getUser();
+}
+fn int getThreadCount() {
+    #ct agnostic
+    return getThreads();
+}
+fn int getCPULoad() {
+    #ct agnostic
+    return getCPULoad();
+}
+static class Specs {
+    #ct agnostic
+    float RAMSize = getRamSize();
+    string CPUName = getcpu();
+    string GPUName = getGPU();
+    
+    int maxGPUClock = getMaxGPUClock();
+    int maxCPUClock = getMaxCPUClock();
+    int maxRAMClock = getMaxRAMClock();
+    
+    int discCount = getDiscCount();
+
+    float totalDiscSpace = getTotalSpace();
+    float usedDiscSpace = getTotalUsedSpace();
+    
+    string CPUArch = getCPUArch();
+}

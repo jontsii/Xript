@@ -98,3 +98,10 @@ class Dictionary {
         }
     }
 }
+class FnPtr {
+    any* fn;
+
+    mt FnPtr init(string name) {
+        fn = Compiler.fnTables.add(name);
+    }
+}
