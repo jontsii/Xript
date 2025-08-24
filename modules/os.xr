@@ -1,5 +1,7 @@
 use Collections;
 
+//#ct agnostic means to choose a function from the compiler list of functions that are done differently on each OS
+
 fn noll writeCommandLine(string command) {
     low {
         REG_LOAD r1 %commmand;
@@ -64,4 +66,16 @@ static class Specs {
     float usedDiscSpace = getTotalUsedSpace();
     
     string CPUArch = getCPUArch();
+}
+
+fn noll launchWindow(int x, int y, int width, int height) {
+    low {
+        REG_LOAD r3;
+        syscall "createWindow" r3 x y width height; // write the pointer to r3
+        RET WRT_MEM r3;
+    }
+}
+fn noll displayMsgBox(string msg) {
+    #ct agnostic
+    msgBox(msg);
 }
