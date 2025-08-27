@@ -1,0 +1,18 @@
+use Collections;
+
+class Event {
+    FnPtr eventFn;
+    string cond;
+
+    mt Event init(FnPtr action, string cond) {
+        this.cond = cond;
+        eventFn = action;
+    }
+    priv mt async noll watch() {
+        while (true) {
+            if (cond) {
+                eventFn();
+            }
+        }
+    }
+}

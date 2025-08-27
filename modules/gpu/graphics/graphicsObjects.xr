@@ -2,9 +2,12 @@
     - a framebuffer
     - memory control APIs (free, allocate, copy)
 */
-use gpu.GPULibMain;
+use GPU.GPULibMain;
 use RamManager;
 use Utils;
+
+enum 2DShape = {Rectangle, Triangle, Circle, Ellipse, Cross};
+enum 3DShape = {Cube, Pyramid, Ball};
 
 fn int getRGB(int r, int g, int b, int* dest) { //needs to be GPU accelerated for making pics faster
     int i = getThreadIndex();
@@ -13,9 +16,13 @@ fn int getRGB(int r, int g, int b, int* dest) { //needs to be GPU accelerated fo
 class Texture {
 
     int[][] data;
+    int x;
+    int y;
 
-    mt Texture init(int[] txtr, int width, int height) { //no GPU acceleration needed, estimatedly, this can make 29 000 Textures per second on i5 12400f (at max perfromance)
+    mt Texture init(int[] txtr, int width, int height, int x, int y) { //no GPU acceleration needed, estimatedly, this can make 29 000 Textures per second on i5 12400f (at max perfromance)
         int[][] temp = int[width][height]; 
+        this.x = x; 
+        this.y = y
         
         for (int i = 0, i < width, i += 1) {
             for (int j = 0, j < height, j += 1) {
@@ -26,25 +33,18 @@ class Texture {
         }
         data = temp;
     }
-}
-class TextureData { //Frame class accepts this 
-    Texture t;
-    int[] data;
-    float stretchAmount;
-
-    mt TextureData init(Texture txtr, int x, int y) {
-        t = txtr;
-        data[0] = x;
-        data[1] = y;
+    mt Texture init(int[][] texture) {
+        data = texture;
     }
 }
+
 class Frame {
-    TextureData[] textures;
+    Texture[] textures;
     int[] data;
     int backColor;
     string target;
 
-    mt Frame init(TextureData[] txtrs, int height, int width, string targetWindow, int background) {
+    mt Frame init(Texture[] txtrs, int height, int width, string targetWindow, int background) {
         textures = txtrs;
         data[0] = height;
         data[1] = width;
@@ -60,14 +60,19 @@ static class FrameSerializer {
         
         gpu (ArrayUtils.getLength(f.textures)) {
             int i = getThreadIndex();
-            TextureData txtr = f.textures[i];
+            Texture txtr = f.textures[i];
 
-            for (int j = 0, j < txtr.data[0] * txtr.data[1], j += f.width) { // j means the row it´s going
-                for (int k = txtr.data[0], k < f.width, k += 1) {
+            for (int j = 0, j < txtr.x * txtr.y, j += f.width) { // j means the row it´s going
+                for (int k = txtr.x, k < f.width, k += 1) {
                     framebuffer[f.width * j + k] = txtr.t[k - txtr.data[0]];
                 }
             }
         }
         return framebuffer;
     }
+}
+
+struct GraphicText {
+    Dictionary coloredText = Dictionary(int, int[2]);
+    string text;
 }

@@ -1,0 +1,336 @@
+use Collections;
+use GPU.Graphics.GraphicsObjects;
+use Os;
+use Events;
+use Input;
+use Utils;
+
+enum Font = {ARIAL, COMIC_SANS_MS, BAZOOKA, BOOK_ANTIQUA, CG_TIMES, COPPERPLATE_GOTHIC_BOLD, CALIBRI};
+
+struct Style {
+    int[4] border;
+    int backColor;
+    Texture backImage?;
+
+    int foreColor;    
+    Font f;
+    int fontSize;
+
+    int[4] margin;
+}
+struct V2 {
+    int x, y;
+}
+
+struct UIElementInfo {
+    V2 pos;
+    int width, height;
+}
+
+class UIElement {
+    string motherWindow;
+
+    V2 asolutePos;
+    V2 pos;
+    int width;
+    int height;
+
+    mt noll setPos(int x, int y) {
+        pos.x = x;
+        pos.y = y;
+    }
+    mt noll setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    } 
+}
+
+class Window {
+    int[] data;
+    string title;
+    Texture icon;
+    any[] elements;
+
+    mt Window init(int x, int y, int width, int height, string title, Texture icon) {
+        data[0] = x;
+        data[1] = y;
+        data[2] = width;
+        data[3] = height;
+        this.icon = icon;
+    }
+    mt noll show() {
+        launchWindow(data[0], data[1], data[2], data[3]);
+    }
+}
+
+class Label ++ UIElement {
+    priv string txt;
+    Style style;
+
+    mt Label init(string content, int size, Style s) {
+        txt = content;
+        style = s;
+    }
+    
+    mt noll setText(string newTxt) {
+        txt = newTxt;
+        //TODO: make this call the window serializer so it can reserialize the window and pass it to the driver
+    }
+}
+
+class Button ++ UIElement {
+    Style style;
+    string text;
+
+    Event clicked;
+    Event hover;
+    Event mouseLeave;
+
+
+    mt Button init(string txt, Style s) {
+        style = s;
+        text = txt;
+        clicked = Event(noll, "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height && getMouseHit()"); //check if cursor is on button
+        hover = Event(noll, "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height");
+        mouseLeave = Event(noll, "!getMousePos()[0] <= x.x + x.width && !getMousePos()[0] >= x.x && !getMousePos()[1] >= x.y &&! getMousePos()[1] <= x.y + x.height");
+    }
+
+    mt noll disable() {
+        clicked.cond = "false";
+        hover.cond = "false";
+        mouseLeave.cond = "false";
+    }
+
+    mt noll enable() {
+        clicked.cond = "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height && getMouseHit()";
+        hover.cond = "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height";
+        mouseLeave.cond = "!getMousePos()[0] <= x.x + x.width && !getMousePos()[0] >= x.x && !getMousePos()[1] >= x.y && !getMousePos()[1] <= x.y + x.height";
+    }
+}
+
+class TextBox ++ UIElement {
+    Style style;
+    priv string placeHolderText;
+    priv int textLen;
+    string text;
+    priv GraphicText txt = GraphicText {Dictionary(int[], int), text};
+
+    Event textChanged;
+    priv Event txtChngd = Event(updateTextLen, "txtChngd", "StringUtils.getLen(text) != textLen");
+    Event hover;
+    Event mouseLeave;
+
+    mt TextBox init(Style s) {
+        style = s;
+        textChanged.cond = "StringUtils.getLength(text) != textLen";
+        hover.cond = "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height";
+        mouseLeave.cond = "!getMousePos()[0] <= x.x + x.width && !getMousePos()[0] >= x.x && !getMousePos()[1] >= x.y && !getMousePos()[1] <= x.y + x.height";
+    }
+
+    priv mt noll updateTextLen() {
+        wait 10;
+        textLen = StringUtils.getLength(text);
+
+        txt.text = text;
+    }
+
+    mt noll color(int color, int start, int end) {
+        txt.coloredText.add(start, {end, color});
+        //TODO: make this call the window serializer so it can reserialize the window and pass it to the driver
+    }
+
+    mt noll setPlaceHolderText(string txt) {
+        placeHolderText = txt;
+    }
+}
+
+class Canvas ++ UIElement {
+    Style style;
+    
+    float brushThickness;
+    int brushColor;
+
+    float transparency;
+
+    Event isChanged;
+    Event hover;
+    Event mouseLeave;
+
+
+    mt Canvas init(Style s) {
+        style = s;
+
+        isChanged.cond = "isMouseDown() && getMousePos() != getMousePos()";
+        hover.cond = "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height";
+        mouseLeave.cond = "!getMousePos()[0] <= x.x + x.width && !getMousePos()[0] >= x.x && !getMousePos()[1] >= x.y && !getMousePos()[1] <= x.y + x.height";
+    }
+}
+
+class Image {
+    Texture img;
+
+
+    mt Image init(int* pic) {
+        img = Texture(pic);
+    }
+    
+}
+
+class Video {
+    Image[] vid;
+
+
+    mt Video init(MP4 video) {
+        //TODO: make a serializer in logical.xr to serialize pics, vids, etc.
+    }
+
+}
+
+class Animation {
+    priv Action[] windowSerializerInstr;
+
+    mt Animation init(Action[] a) {
+        windowSerializerInstr = a;
+    }
+
+    mt noll play(int speed) { //speed is fps
+        for (Action a in windowSerializerInstr) {
+            a.execute();
+            wait 1 / speed;
+        }
+    }
+
+    /*instructions are:
+        MOVE objName, newPosition, speed (px / ms); move objName to newPosition at speed speed
+        SET_COLOR objName, newColor, speed (RGB value / ms); set color of objName to newColor at speed speed
+        ROTATE objName, orientation, speed (degree / ms); rotate objName to orientation at speed speed
+        FADE objName, newPic, speed (px / ms), direction, color; fade object at speed
+    */
+
+    mt static Action[] serializeToAnimation(string[] instrs) {
+        int i = 0;
+        Action[] ans;
+
+        string[] instrData;
+
+        for (string instr in instrs) {
+            instrData = StringUtils.split(instr, ',');
+            if (instrData[0] == "MOVE") {
+                //TODO: call window serializer to move it
+            }
+            else if (instrData[0] == "SET_COLOR") {
+                //TODO: call window serializer to move it
+            }
+            else if (instrData[0] == "ROTATE") {
+                //TODO: call window serializer to move it
+            }
+            else if (instrData[0] == "FADE") {
+                //TODO: call window serializer to move it
+            }
+            else {
+                //throw an exception
+            }
+        }
+        return ans;
+    }
+}
+
+class Slider ++ UIElement {
+    Style style;
+    int max;
+    int min;
+    priv int pixelPerValue;
+    float value;
+    priv float tempVal;
+
+    Event valueChanged;
+
+    mt Slider init(int maxAmount, int minAmount, Style s) {
+        style = s;
+        max = maxAmount;
+        min = minAmount;
+        pixelPerValue = width / maxAmount;
+        valueChanged.cond = "tempVal != value";
+        watchSliderValue();
+    }
+
+    priv mt async noll watchSliderValue() {
+        int[] mousePos;
+        await while (true) {
+            if (isMouseDown()) {
+
+                mousePos = getMousePos();
+                if (mousePos[0] >= absolutePos.x + width) {
+                    value = 100.0;
+                    await wait 1
+                    tempVal = value;
+                }
+
+                else if (mousePos[0] <= absolutePos.x) {
+                    value = 0.0;
+                    await wait 1
+                    tempVal = value;
+                }
+
+                else {
+                    value = (mousePos[0] - getWindow(motherWindow).x) / pixelPerValue;
+                    await wait 1
+                    tempVal = value;
+                }
+            }
+        }
+    }
+}
+
+class CheckBox ++ UIElement {
+    Style style;
+    bool isChecked;
+    string text;
+    
+    2DShape s;
+    Texture background;
+
+    mt CheckBox init(2DShape s, Style s, string txt) {
+        this.s = s;
+        style = s;
+        text = txt;
+    }
+
+}
+
+class RadioButton ++ UIElement {
+    Style style;
+    bool isChecked;
+    
+    string text;
+
+    2DShape s;
+    Texture background;
+
+    mt RadioButton init(2DShape shape, Texture t, Style s) {
+        s = shape;
+        background = t;
+        style = s;
+    }
+    
+}
+
+class RadioButtonGroup {
+    List btns;
+    RadioButton checked;
+
+    mt RadioButtonGroup init(RadioButton[] buttons) {
+        btns = List(RadioButton, buttons);
+        updateChecked();
+    }
+
+    priv mt async noll updateChecked() {
+        while (true) {
+            for (RadioButton btn in btns) {
+                if (btn.isChecked) {
+                    checked = btn;
+                }
+            }
+        }
+    }
+}

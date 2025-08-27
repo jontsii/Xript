@@ -4,7 +4,7 @@ static class GPUMath {
 fn any* GPUAlloc(int size) {
     low {
         REG_LOAD r1 %size;
-        SYS_CALL "GPU_alloc" r1 r2 //call GPU_alloc (name can change), take sixe from r1 and write it to r2
+        SYS_CALL "GPU_alloc" r1 r2; //call GPU_alloc (name can change), take sixe from r1 and write it to r2
         NEW Var ptr ansPtr r3;
         WRT_MEM r2 r3; //write r2´s value to pointer in r3
         SPILL_REG;

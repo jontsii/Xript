@@ -98,10 +98,24 @@ class Dictionary {
         }
     }
 }
+
 class FnPtr {
     any* fn;
 
     mt FnPtr init(string name) {
         fn = Compiler.fnTables.add(name);
+    }
+}
+
+class Action {
+    FnPtr fn;
+    any[] args;
+
+    mt Action init(FnPtr function, any[] args) {
+        fn = function;
+        this.args = args;
+    }
+    mt any execute() {
+        fn(args);
     }
 }
