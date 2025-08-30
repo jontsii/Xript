@@ -4,11 +4,13 @@ use Os;
 use Events;
 use Input;
 use Utils;
+unite layouts.xr;
 
 enum Font = {ARIAL, COMIC_SANS_MS, BAZOOKA, BOOK_ANTIQUA, CG_TIMES, COPPERPLATE_GOTHIC_BOLD, CALIBRI};
 
 struct Style {
     int[4] border;
+    int[4] borderColor;
     int backColor;
     Texture backImage?;
 
@@ -28,7 +30,7 @@ struct UIElementInfo {
 }
 
 class UIElement {
-    string motherWindow;
+    Window motherWindow;
 
     V2 asolutePos;
     V2 pos;
@@ -47,9 +49,9 @@ class UIElement {
 
 class Window {
     int[] data;
-    string title;
-    Texture icon;
-    any[] elements;
+    priv string title;
+    priv Texture icon;
+    priv any[] elements;
 
     mt Window init(int x, int y, int width, int height, string title, Texture icon) {
         data[0] = x;

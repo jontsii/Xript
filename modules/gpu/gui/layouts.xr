@@ -1,10 +1,133 @@
 use Utils;
 use Collections;
+unite elements.xr;
 
 //Layouts:
 //  VerticalPanel (stack things vertically)
 //  HorizontalPanel (stack things horizontally)
 //  FreePanel (position things in the panel by pixels)
 //  Grid (put things in a grid)
-//  
+//  MainGrid (the main grid the window operates on)
 //
+
+class VerticalPanel {
+    Window motherWindow; //make the data of this window and mother window to the same pointer
+
+    int maxHeight;
+    int minHeight;
+
+    float xRatio;
+    float yRatio;
+
+    int rowCount;
+    any[rowCount] children;
+
+    Dictionary xRatios = Dictionary(any, float);
+    Dictionary yRatios = Dictionary(any, float);
+
+    mt VerticalPanel init(int max, int min, int rows) {
+        maxHeight = max;
+        minHeight = min;
+        rowCount = rows;
+    }
+
+    mt noll setChildren(any[] child) {
+        int totalHeight;
+
+        children = child;
+        for (any _child in children) {
+            totalHeight += _child.height;
+        }
+
+        if (totalHeight > maxHeight) {
+            //throw a childSize error
+        }
+        if (totalHeight < minHeight) {
+            //throw a childsize error
+        }
+        for (any child in children) { 
+            yRatios.add(child, motherWindow.data[3] / child.height);
+            xRatios.add(child, motherWindow.data[2] / child.width);
+        }
+    }
+
+    mt noll resizeChildren() {
+        for (any child in children) {
+            child.height = motherWindow.data[3] / yRatios.get(child);
+            child.width = motherWindow.data[2] / xRatios.get(child); 
+        }
+    }
+}
+
+class HorizontalPanel {
+    int maxWidth;
+    int minWidth;
+
+    int maxHeight;
+    int minHeight;
+
+    int columnCount;
+
+    mt HorizontalPanel init(int min, int max, int columnCount) {
+        maxWidth = max;
+        minWidth = min;
+        this.columnCount = columnCount;
+    }
+
+    mt noll setChildren(any[] child) {
+        int totalHeight;
+
+        children = child;
+        for (any _child in children) {
+            totalHeight += _child.height;
+        }
+
+        if (totalHeight > maxHeight) {
+            //throw a childSize error
+        }
+        if (totalHeight < minHeight) {
+            //throw a childsize error
+        }
+        for (any child in children) { 
+            yRatios.add(child, motherWindow.data[3] / child.height);
+            xRatios.add(child, motherWindow.data[2] / child.width);
+        }
+    }
+
+    mt noll resizeChildren() {
+        for (any child in children) {
+            child.height = motherWindow.data[3] / yRatios.get(child);
+            child.width = motherWindow.data[2] / xRatios.get(child); 
+        }
+    }
+}
+
+class FreePanel {
+    any[] children;
+    V2[] childPos;
+
+    mt FreePanel init(any[] childr, V2[] childPos) {
+        children = childr;
+        this.childPos = childPos;
+    }
+}
+
+class Grid {
+    VerticalPanel[] children;
+    int[] rowSizes;
+    int[] colSizes;
+    
+    mt Grid init(int[] rows, int[] cols) {
+        rowSizes = rows;
+        colSizes = cols;
+
+        for (int i = 0, i < ArrayUtils.getLength(colSizes), i += 1) {
+            children[i] = VerticalPanel(rowSizes[i], 10, ArrayUtils.getLength(rowSizes));
+        }
+    }
+
+    mt noll addChild(int row, int col, any child) {
+        children[col].children[i] = child;
+        //TODO: make this call window serializer
+    }
+}
