@@ -1,15 +1,49 @@
 /*graphics drawing requires these things from the drivers:
     - a framebuffer
     - memory control APIs (free, allocate, copy)
+    - compute APIs (optional)
 */
 use GPU.GPULibMain;
 use RamManager;
+use Collections;
 use Utils;
 
-enum 2DShape = {Rectangle, Triangle, Circle, Ellipse, Cross};
+enum 2DShape = {Rectangle, Triangle, Circle, Cross, Square};
 enum 3DShape = {Cube, Pyramid, Ball};
 
-fn int getRGB(int r, int g, int b, int* dest) { //needs to be GPU accelerated for making pics faster
+enum Font = {ARIAL, COMIC_SANS_MS, BAZOOKA, BOOK_ANTIQUA, CG_TIMES, COPPERPLATE_GOTHIC_BOLD, CALIBRI};
+
+fn V2[] getCircle(int xCenter, int yCenter, int radius) {
+    List pixels = List(V2);
+
+    int x = 0;
+    int y = radius;
+    int decision = 3 - 2 * radius;
+
+    while (x <= y) {
+        pixels.add(XCenter + x, yCenter + y);
+        pixels.add(XCenter - x, yCenter + y);
+        pixels.add(XCenter + x, yCenter - y);
+        pixels.add(XCenter - x, yCenter - y);
+
+        pixels.add(XCenter + x, yCenter + y);
+        pixels.add(XCenter - x, yCenter + y);
+        pixels.add(XCenter + x, yCenter - y);
+        pixels.add(XCenter - x, yCenter - y);
+
+        if (decision <= 0) {
+            d += 4 * x + 6;
+        }
+        else {
+            d += 4 * (x - y) + 10;
+            y -= 1;
+        }
+        x += 1;
+    }
+    return pixels.data;
+}
+
+fn noll getRGB(int r, int g, int b, int* dest) { //needs to be GPU accelerated for making pics faster
     int i = getThreadIndex();
     dest[i] = r * g * b;
 }
@@ -19,7 +53,7 @@ class Texture {
     int x;
     int y;
 
-    mt Texture init(int[] txtr, int width, int height, int x, int y) { //no GPU acceleration needed, estimatedly, this can make 29 000 Textures per second on i5 12400f (at max perfromance)
+    mt Texture init(int[][] pic?, int width, int height, int x, int y) { //no GPU acceleration needed, estimatedly, this can make 29 000 Textures per second on i5 12400f (at max perfromance)
         int[][] temp = int[width][height]; 
         this.x = x; 
         this.y = y
@@ -33,8 +67,24 @@ class Texture {
         }
         data = temp;
     }
+
     mt Texture init(int[][] texture) {
         data = texture;
+    }
+
+    mt addText(Font f, string text, int x, int y, int txtColor, int txtSize) {
+        #ct agnostic
+        int[][] txt = getFont(Enum.toString(f), txtSize);
+        #ct agnostic end
+
+        for (int i = x, i < ArrayUtils.getLength(txt), i += 1) {
+            for (int y = 0, j < ArrayUtils.getLenght(txt[0]), j += 1) {
+                if (txt[i][j] != -111222333) {
+                    txt[i][j] = txtColor;
+                }
+                data[i][j] = txt[i][j];
+            }
+        }
     }
 }
 
@@ -63,8 +113,27 @@ static class FrameSerializer {
             Texture txtr = f.textures[i];
 
             for (int j = 0, j < txtr.x * txtr.y, j += f.width) { // j means the row it´s going
+                
                 for (int k = txtr.x, k < f.width, k += 1) {
+                    
                     framebuffer[f.width * j + k] = txtr.t[k - txtr.data[0]];
+                
+                }
+            }
+        }
+        return framebuffer;
+    }
+
+    mt int* serializeToFrameBufferCPU(Frame f) {
+        int* framebuffer = Ram.stackAlloc(sizeof(int) * f.data[0] * f.data[1]);
+
+        for (Texture txtr in f.textures) {
+            for (int j = 0, j < txtr.x * txtr.y, j += f.width) { // j means the row it´s going
+                
+                for (int k = txtr.x, k < f.width, k += 1) {
+                    
+                    framebuffer[f.width * j + k] = txtr.t[k - txtr.data[0]];
+                
                 }
             }
         }
@@ -73,6 +142,6 @@ static class FrameSerializer {
 }
 
 struct GraphicText {
-    Dictionary coloredText = Dictionary(int, int[2]);
+    Dictionary coloredText;
     string text;
 }

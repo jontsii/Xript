@@ -6,8 +6,6 @@ use Input;
 use Utils;
 unite layouts.xr;
 
-enum Font = {ARIAL, COMIC_SANS_MS, BAZOOKA, BOOK_ANTIQUA, CG_TIMES, COPPERPLATE_GOTHIC_BOLD, CALIBRI};
-
 struct Style {
     int[4] border;
     int[4] borderColor;
@@ -19,6 +17,7 @@ struct Style {
     int fontSize;
 
     int[4] margin;
+    Event styleChanged = Event(callWindowSerializer, "this != this");
 }
 struct V2 {
     int x, y;
@@ -30,7 +29,7 @@ struct UIElementInfo {
 }
 
 class UIElement {
-    Window motherWindow;
+    Window* motherWindow;
 
     V2 asolutePos;
     V2 pos;
@@ -45,24 +44,6 @@ class UIElement {
         this.width = width;
         this.height = height;
     } 
-}
-
-class Window {
-    int[] data;
-    priv string title;
-    priv Texture icon;
-    priv any[] elements;
-
-    mt Window init(int x, int y, int width, int height, string title, Texture icon) {
-        data[0] = x;
-        data[1] = y;
-        data[2] = width;
-        data[3] = height;
-        this.icon = icon;
-    }
-    mt noll show() {
-        launchWindow(data[0], data[1], data[2], data[3]);
-    }
 }
 
 class Label ++ UIElement {
@@ -115,7 +96,9 @@ class TextBox ++ UIElement {
     priv string placeHolderText;
     priv int textLen;
     string text;
-    priv GraphicText txt = GraphicText {Dictionary(int[], int), text};
+    GraphicText txt = GraphicText {Dictionary(int[], int), text};
+
+    int caretPosition = 0;
 
     Event textChanged;
     priv Event txtChngd = Event(updateTextLen, "txtChngd", "StringUtils.getLen(text) != textLen");
@@ -136,6 +119,15 @@ class TextBox ++ UIElement {
         txt.text = text;
     }
 
+    priv mt async noll updateTxtBox() {
+        Key k;
+        await while (true) {
+            k = getKBHit();
+            text += Enum.toString(k);
+            caretPosition += 1;
+        }
+    }
+
     mt noll color(int color, int start, int end) {
         txt.coloredText.add(start, {end, color});
         //TODO: make this call the window serializer so it can reserialize the window and pass it to the driver
@@ -148,6 +140,7 @@ class TextBox ++ UIElement {
 
 class Canvas ++ UIElement {
     Style style;
+    List coloredPixels = List(int[3]);
     
     float brushThickness;
     int brushColor;
@@ -165,11 +158,27 @@ class Canvas ++ UIElement {
         isChanged.cond = "isMouseDown() && getMousePos() != getMousePos()";
         hover.cond = "getMousePos()[0] <= absolutePos.x + x.width && getMousePos()[0] >= absolutePos.x && getMousePos()[1] >= absolutePos.y && getMousePos()[1] <= absolutePos.y + x.height";
         mouseLeave.cond = "!getMousePos()[0] <= x.x + x.width && !getMousePos()[0] >= x.x && !getMousePos()[1] >= x.y && !getMousePos()[1] <= x.y + x.height";
+        draw();
+    }
+
+    priv mt async noll draw() {
+        int[] mousePos;
+        await while (true) {
+            mousePos = getMousePos();
+            if (mousePos[0] < width + absolutePos.x && mousePos[0] > absolutePos.x &&
+                mousePos[1] < height + absolutePos.y && mousePos[1] > absolutePos.y && getMouseDown()) {
+                    coloredPixels.add({mousePos[0], mousePos[1], brushColor});
+            }
+        }
     }
 }
 
 class Image {
     Texture img;
+    int height, width;
+    
+    V2 pos;    
+    V2 absolutePos;
 
 
     mt Image init(int* pic) {
@@ -180,12 +189,16 @@ class Image {
 
 class Video {
     Image[] vid;
+    int currentFrame;
 
 
     mt Video init(MP4 video) {
         //TODO: make a serializer in logical.xr to serialize pics, vids, etc.
     }
-
+    
+    mt noll play(int fps) {
+        //TODO: call window serializer to reserialize window
+    }
 }
 
 class Animation {
@@ -244,17 +257,28 @@ class Slider ++ UIElement {
     priv int pixelPerValue;
     float value;
     priv float tempVal;
+    int sliderPos;
+
+    2DShape sliderShape;
+    int sliderColor;
 
     Event valueChanged;
 
-    mt Slider init(int maxAmount, int minAmount, Style s) {
+    mt Slider init(int maxAmount, int minAmount, Style s, 2DShape sliderShape, int sliderColor) {
         style = s;
         max = maxAmount;
         min = minAmount;
+        
         pixelPerValue = width / maxAmount;
         valueChanged.cond = "tempVal != value";
+
+        this.sliderShape = sliderShape;
+        this.sliderColor = sliderColor;
+
         watchSliderValue();
     }
+
+    
 
     priv mt async noll watchSliderValue() {
         int[] mousePos;
@@ -266,18 +290,21 @@ class Slider ++ UIElement {
                     value = 100.0;
                     await wait 1
                     tempVal = value;
+                    sliderPos = value;
                 }
 
                 else if (mousePos[0] <= absolutePos.x) {
                     value = 0.0;
                     await wait 1
                     tempVal = value;
+                    sliderPos = value;
                 }
 
                 else {
                     value = (mousePos[0] - getWindow(motherWindow).x) / pixelPerValue;
                     await wait 1
                     tempVal = value;
+                    sliderPos = value;
                 }
             }
         }
@@ -289,10 +316,13 @@ class CheckBox ++ UIElement {
     bool isChecked;
     string text;
     
-    2DShape s;
+    2DShape s = 2DShape.Square;
     Texture background;
+    Texture unCheckedbackground;
 
-    mt CheckBox init(2DShape s, Style s, string txt) {
+    mt CheckBox init(Texture t, Texture ut, Style s, string txt) {
+        background = t;
+        unCheckedbackground = ut;
         this.s = s;
         style = s;
         text = txt;
@@ -306,15 +336,25 @@ class RadioButton ++ UIElement {
     
     string text;
 
-    2DShape s;
     Texture background;
+    Texture unCheckedbackground;
 
-    mt RadioButton init(2DShape shape, Texture t, Style s) {
-        s = shape;
+    mt RadioButton init(Texture t, Texture ut, Style s) {
+        unCheckedbackground = ut;
         background = t;
         style = s;
     }
     
+    priv mt async noll watchClicks() {
+        int[] mousePos;
+        await while (true) {
+            mousePos = getMousePos();
+            if (mousePos[0] < absolutePos.x + width && mousePos[0] > absolutePos.x &&
+                mousePos[1] < absolutePos.y + height && mousePos[1] > absolutePos.y && getMouseClick == MouseButton.Left) {
+                isChecked = true;    
+            }
+        }
+    }
 }
 
 class RadioButtonGroup {
@@ -331,6 +371,11 @@ class RadioButtonGroup {
             for (RadioButton btn in btns) {
                 if (btn.isChecked) {
                     checked = btn;
+                    btns.remove(btn);
+                    for (RadioButton _btn in btns) {
+                        _btn.isChecked = false;
+                    }
+                    btns.add(btn);
                 }
             }
         }

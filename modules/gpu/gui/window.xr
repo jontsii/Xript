@@ -1,0 +1,393 @@
+use Collections;
+use Events;
+use Input;
+use GPU.Graphics.GraphicsObjects;
+use GPU.GPULibMain;
+use Os;
+use RamManager;
+use Standard.IO;
+use Standard.Cast;
+use Utils;
+
+unite elements.xr;
+unite layouts.xr;
+
+class Window {
+    int[] data;
+    priv string title;
+    priv Texture icon;
+    List UIElements = List(any);
+    any[] elements; //these are layouts
+    int elementCount = 0;
+    int backColor;
+
+    mt Window init(int x, int y, int width, int height, string title, Texture icon) {
+        data[0] = x;
+        data[1] = y;
+        data[2] = width;
+        data[3] = height;
+        this.icon = icon;
+
+        //count elements
+        for (any a in elements) {
+            elementCount += ArrayUtils.getLength(a.children);
+        }
+        for (any e in elements) {
+            for (any c in e) { 
+                UIElements.add(c);
+            }
+        }
+    }
+    mt noll show() {
+        launchWindow(data[0], data[1], data[2], data[3]);
+    }
+    mt noll hide() {
+        #ct agnostic
+        exitWindow();
+    }
+    mt noll setSize(int height, int width) {
+        #ct agnostic
+        setWindowSize(height, width); 
+    }
+    mt noll setPosition(int x, int y) {
+        #ct agnostic
+        setWindowPos(x, y);
+    }
+    mt noll setIcon(Texture t) {
+        #ct agnostic
+        setWindowIcon(t);
+        icon = t;
+    }
+}
+
+//define helper functions for window serializer
+
+fn noll serializeButton(Frame* f, Button child, int i) {
+    *f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+        
+    if (child.style.backImage == noll) *f.textures[i].data = int[child.width][child.height].data = child.style.backColor;
+    else *f.textures[i].data = child.style.backImage.data;
+                            
+    *f.textures[i].addText(child.style.f, child.text, child.style.border[0] + child.height / 2 - child.style.fontSize, child.style.border[2] + child.width / 2 - child.style.fontSize child.style.foreColor, child.style.fontSize);
+}
+
+fn noll serializeButton(Frame* f, Label child, int i) {
+    *f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+    
+    if (child.style.backImage == noll) f.textures[i].data = int[child.width][child.height].data = child.style.backColor;
+    else *f.textures[i].data = child.style.backImage.data;
+    
+    *f.textures[i].addText(child.style.f, child.text, child.style.foreColor);
+}
+
+fn noll serializeTextBoxCPU(Frame* f, TextBox child, int i) { //GPU version will be different
+    f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+                            
+    f.textures[i].data.data = child.style.backColor;
+                            
+    if (child.placeHolderText != noll && child.text == noll) f.textures[i].addText(child.style.f, child.placeHolderText, child.style.border[0] + 5, child.style.border[2] + 5 child.style.foreColor, child.style.fontSize);
+    if (child.text != "") f.textures[i].addText(child.style.f, child.text, child.style.border[0] + 5, child.style.border[2] + 5, child.style.foreColor, child.style.fontSize);
+                            
+    if (child.style.backImage == noll) f.textures[i].data = int[child.width][child.height].data = child.style.backColor;
+    else f.textures[i].data = child.style.backImage.data;
+
+    for (int j = 0, j < ArrayUtils.getLength(child.txt.coloredText.keys.data), j += 1) {
+        f.textures[i].addText(child.style.f, StringUtils.choose(child.txt.coloredText.values[j][0], child.txt.coloredText.values[j][1]), child.style.border[0] + 5, child.style.border[2] + 5, child.txt.coloredText.keys[j], , child.style.fontSize);
+    }
+}
+
+fn noll serializeCanvas(Frame* f, Canvas child, int i) {
+    f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+                            
+    if (child.style.backImage == noll) f.textures[i].data = int[child.width][child.height].data = child.style.backColor;
+    else f.textures[i].data = child.style.backImage.data;
+
+    for (int[3] pixel in child.coloredPixels) {
+        f.textures[i].data[pixel[0]][pixel[1]] = pixel[2];
+    }
+}
+
+fn noll serializeSlider(Frame* f, Slider child, int i) {
+    *f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+                            
+    if (child.style.backImage == noll) *f.textures[i].data = int[child.width][child.height].data = child.style.backColor;
+    else *f.textures[i].data = child.style.backImage.data;
+
+    for (int j = 0, j < child.height, j += 1) {
+        for (int k = 0, k < child.width, k += 1) {
+            *f.textures[i].data[j][k] = child.foreColor;
+        }
+    }
+
+    //draw the slider
+
+    if (child.sliderShape == 2DShape.Rectangle) {
+        for (int j = 0, j < child.height * 2, j += 1) {
+            for (int k = 0, k < child.height * 2, k += 1) {
+                *f.textures[i].data[j][k] = sliderColor;
+            }
+        }
+    }
+
+    else if (child.sliderShape == 2DShape.Circle) {
+        V2[] circle = getCircle(child.sliderPos, child.height * 2, child.height * 2);
+        for (V2 pixel in circle) {
+            *f.textures[i].data[pixel.x][pixel.y] = sliderColor;
+            }
+        }
+    }    
+    else if (child.sliderShape == 2DShape.Triangle) {
+        for (int i = 0, i <= child.height, i += 1) {
+            *f.textures[i].data[sliderPos][i] = sliderColor;
+            for (int j = 0, j < i, j += 1) {
+                *f.textures[i].data[sliderPos - j][i] = sliderColor;
+                *f.textures[i].data[sliderPos + j][i] = sliderColor;
+            }
+        }
+    }
+    else if (child.sliderShape == 2DShape.Cross) {
+        writeLn("Jesus Christ loves you. Indeed he loves you so much that he went on the cross and died for you and me.\nHe rose from the dead 3 days later, permanently defeating death and sin");
+        *f.textures[i].data.data = 16_581_375;
+        int x = int(height / 4);
+
+        for (int j = 0, j < child.height, j += 1) {
+            if (j > x && j < x * 2) {
+                for (int k = child.width / 2 - x / 1.5, k < child.width / 2 + x / 1.5, i += 1) {
+                    *f.textures[i].data[k][j] = 0;
+                }
+            }
+            else (j < x) {
+                for (int k = child.width / 2 - x / 2, k < child.width / 2 + x / 2, i += 1) {
+                    *f.textures[i].data[k][j] = 0;
+                }
+            }
+        }
+    }
+}
+
+fn noll serializeCheckBox(Frame* f, CheckBox child, int i) {
+    *f.textures[i] = Texture(noll, child.width, child.height, child.pos.x, child.pos.y);
+    
+    if (child.s == 2DShape.Square) {
+        if (child.isChecked) {
+            for (int j = 0, j < ArrayUtils.getLength(child.background.data) / 2, j += 1) {
+                for (int k = 0, k < ArrayUtils.getLength(child.background.data) / 2, k += 1) {
+                    *f.textures[i].data[j][k] = child.background[j][k];
+                }
+            }
+        }
+        else {
+            for (int j = 0, j < ArrayUtils.getLength(child.background.data) / 2, j += 1) {
+                for (int k = 0, k < ArrayUtils.getLength(child.background.data) / 2, k += 1) {
+                    *f.textures[i].data[j][k] = child.unCheckedbackground[j][k];
+                }
+            }
+        }
+    }
+    *f.textures[i].addText(child.style.f, child.text, ArrayUtils.getLength(child.background.data) / 2 + 7, 0, child.style.foreColor, child.style.fontSize);
+}
+
+fn noll serializeRadioButton(Frame* f, RadioButton child, int i) {
+    serializeCheckBox(f, child, i);
+}
+
+fn noll serializeBordersAndMargins(Frame *f, any child, int i) { //can be used for any element that inherits from class UIElement
+    for (int j = child.style.margin[0], j < child.style.border[0], j += 1) { //left border
+        for (int k = 0, k < child.height, k += 1) {
+            *f.textures[i].data[j][child.width * k] = child.style.borderColor[0];
+        }
+    }
+
+    for (int j = child.width - child.style.border[2] - child.style.margin[2], j < child.width, j += 1) { //right border
+        for (int k = 0, k < child.height, k += 1) {
+            *f.textures[i].data[j][child.width * k] = child.style.borderColor[2];
+        }
+    }
+
+    for (int j = child.style.margin[1], j < child.style.border[1], j += 1) { //top border
+        for (int k = 0, k < child.width, k += 1) {
+            *f.textures[i].data[j][k] = child.style.borderColor[1];
+        }
+    }
+
+    for (int j = child.height - child.style.border[3] - child.style.margin[3], j < child.style.border[1], j += 1) { //bottom border
+        for (int k = 0, k < child.width, k += 1) {
+            *f.textures[i].data[j][k] = child.style.borderColor[1];
+        }
+    }
+
+    //margins
+
+    for (int margin in child.style.margin) {
+        for (int j = 0, j < margin, j += 1) {
+            for (int k = 0, k < child.height, k += 1) {
+                *f.textures[i].data[j][k] = chils.*motherwindow.backColor;
+            }
+        }
+    }
+}
+
+fn noll serializeGridCPU(Frame* f, int i, any element) {
+    for (VerticalPanel v in element.children) {
+        for (any child in v.children) {
+            t = Type.typeof(child);
+            switch (t) { 
+                case (Button) {
+                    serializeButton(%f, child, i);
+                }   
+                
+                case (Label) {
+                    serializeLabel(%f, child, i);
+                }
+
+                case (TextBox) {
+                    serializeTextBox(%f, child, i);
+                }
+
+                case (Canvas) {
+                    serializeCanvas(%f, child, i);
+                }
+                        
+                case (Image) {
+                    f.textures[i] = Texture(child.t, child.width, child.height, child.pos.x, child.pos.y);
+                }
+                        
+                case (Video) {
+                    f.textures[i] = Texture(child.vid[child.currentFrame], child.width, child.height, child.pos.x, child.pos.y);
+                }
+
+                case (Slider) {
+                    serializeSlider(%f, child, i);
+                }
+                case (CheckBox) {
+                    serializeCheckBox(%f, child, i);
+                }
+                case (RadioButton) {
+                    serializeRadioButton(%f, child, i);
+                }
+            }
+        }
+    }
+}
+
+fn noll serializeGridGPU(Frame* f, int i, any element) {
+    any child = elements[i]
+}
+
+
+
+
+static class WindowSerializer {
+    mt Frame serializeWindowToFrameCPU(Window w) { //CPU serialization. used for simple GUIs or on PCs with no GPU
+        Frame f = Frame();
+        f.textures = Texture[w.elementCount];
+        Type t;
+        Type layoutT;
+
+        int i = 0;
+
+        for (any element in w.elements) {
+            layoutT = Type.typeof(element);
+        
+            if (layoutT != Grid) {
+                for (any child in element.children) {
+                    t = Type.typeof(child);
+                    switch (t) {
+                        case (Button) {
+                            serializeButton(%f, child, i);
+                        }   
+                
+                        case (Label) {
+                            serializeLabel(%f, child, i);
+                        }
+
+                        case (TextBox) {
+                            serializeTextBox(%f, child, i);
+                        }
+
+                        case (Canvas) {
+                            serializeCanvas(%f, child, i);
+                        }
+                        
+                        case (Image) {
+                            f.textures[i] = Texture(child.t, child.width, child.height, child.pos.x, child.pos.y);
+                        }
+                        
+                        case (Video) {
+                            f.textures[i] = Texture(child.vid[child.currentFrame], child.width, child.height, child.pos.x, child.pos.y);
+                        }
+
+                        case (Slider) {
+                            serializeSlider(%f, child, i);
+                        }
+                        case (CheckBox) {
+                            serializeCheckBox(%f, child, i);
+                        }
+                        case (RadioButton) {
+                            serializeRadioButton(%f, child, i);
+                        }
+                    }
+                }
+                if (child.inheritsFrom(UIElement)) {
+                    serializeBordersAndMargins(%f, child, i);
+                }
+            }
+
+            else {
+                serializeGridCPU(%f, i, element);
+            }
+            i += 1;
+        }
+        return f;
+    }
+
+
+    mt Frame serializeWindowToFrame(Window w) {
+        Frame f = Frame();
+        f.textures = Texture[w.elementCount];
+        Type t;
+
+        gpu (w.elementCount) {
+            int i = getThreadIndex();
+            
+            any child = w.UIElements[i];
+            Type t = Type.typeof(child);
+
+            switch (t) {
+                case (Button) {
+                    serializeButton(%f, child, i);
+                }   
+                
+                case (Label) {
+                    serializeLabel(%f, child, i);
+                }
+
+                case (TextBox) {
+                    serializeTextBox(%f, child, i);
+                }
+
+                case (Canvas) {
+                    serializeCanvas(%f, child, i);
+                }
+                        
+                case (Image) {
+                    f.textures[i] = Texture(child.t, child.width, child.height, child.pos.x, child.pos.y);
+                }
+                        
+                case (Video) {
+                    f.textures[i] = Texture(child.vid[child.currentFrame], child.width, child.height, child.pos.x, child.pos.y);
+                }
+
+                case (Slider) {
+                    serializeSlider(%f, child, i);
+                }
+                case (CheckBox) {
+                    serializeCheckBox(%f, child, i);
+                }
+                  case (RadioButton) {
+                    serializeRadioButton(%f, child, i);
+                }
+            }
+        }
+    }
+}
