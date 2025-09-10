@@ -47,6 +47,8 @@ static class StringUtils { //has a lot of utilities for the type string
                        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', '|', '/', '`', '*', '?', '~', '_', '.', '^', '+', '{', '(', '[', ':', '&',
                        '\'', ']', ',', '-', ')', '@', '<', '\""', ';', '>', '\\', '#', '!', '$', '}', '%'};  
+
+    char[10] nums = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     
     mt int getLength(string x) {
         int counter = 0;
@@ -131,4 +133,25 @@ static class StringUtils { //has a lot of utilities for the type string
         }
         return counter;
     }
+    mt string choose(string x, int start, int end) {
+        string s = "";
+        for (int i = start, i < end, i += 1) {
+            s += x[i];
+        }
+    }
+    mt bool isDigits(string x) {
+        for (char c in x) {
+            if (!ArrayUtils.has(nums, c)) {
+                return false
+            }
+        }
+        return true;
+    }
+}
+
+static class Enum {
+    string getString(any val) {
+        Compiler.typeTable.modify(val, string);
+        return val;
+    };
 }

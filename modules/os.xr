@@ -79,3 +79,8 @@ fn noll displayMsgBox(string msg) {
     #ct agnostic
     msgBox(msg);
 }
+
+fn noll exit(int exitCode) {
+    #ct agnostic
+    exitCurrentrogram();
+}

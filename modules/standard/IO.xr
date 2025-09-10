@@ -1,0 +1,12 @@
+#ct agnostic
+any* console = getConsole();
+
+fn noll writeLn(string msg) {
+    #ct agnostic
+    writeToConsole(msg + '\n', console);    
+}
+
+fn string readLn() {
+    #ct agnostic
+    return readConsole(console);
+}

@@ -1,0 +1,70 @@
+use RamManager;
+use Utils;
+use Compiler;
+
+class ObjData { //this class is the base for all objects and has info about them
+    
+    string name;
+    int instanceNum;
+    int objNum;
+    string[] fields;
+    Type[] parents;
+
+    mt bool inheritsFrom(Type cls) {
+        if (ArrayUtils.has(parents, cls)) return true;
+        else return false;
+    }
+
+    mt bool hasField(string name) {
+        if (ArrayUtils.has(fields, name)) return true;
+        else return false;
+    }
+}
+
+fn string castToString(any var) {
+    Compiler.typeTable.modify(var.name, string);
+    return var;
+}
+fn int castToInt(any var) {
+    if (StringUtils.isDigits(castToString(var))) {
+        Compiler.typeTable.modify(var.name, int);
+        return var;
+    }
+    else //throw an error
+}
+fn float castToFloat16(any var) {
+    string s = castToString(var);
+    if (StringUtils.has(s, '.')) {
+        if (StringUtils.isDigits(s)) {
+            Compiler.typeTable.modify(var.name, float);
+            return var;
+        }
+    }
+} 
+fn float castToFloat32(any var) {
+    string s = castToString(var);
+    if (StringUtils.has(s, '.')) {
+        if (StringUtils.isDigits(s)) {
+            Compiler.typeTable.modify(var.name, float);
+            return var;
+        }
+    }
+}
+fn decimal castToDecimal(any var) {
+    string s = castToString(var);
+    if (StringUtils.has(s, '.')) {
+        if (StringUtils.isDigits(s)) {
+            Compiler.typeTable.modify(var.name, decimal);
+            return var;
+        }
+    }
+}
+fn float128 castToFloat128(any var) {
+    string s = castToString(var);
+    if (StringUtils.has(s, '.')) {
+        if (StringUtils.isDigits(s)) {
+            Compiler.typeTable.modify(var.name, float128);
+            return var;
+        }
+    }
+}
