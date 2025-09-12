@@ -34,4 +34,24 @@ static class File {
         #ct agnostic
         deleteFileFromOs(path);
     }
+    mt noll executeFile(string path) {
+        #ct agnostic
+        executeFileInOs(path);
+    }
+}
+
+fn string listenToPort(int port) {
+    string input;
+    low {
+        REG_LOAD port %r3;
+        syscall "listenToLocalPort" port input;
+    }
+    return input;
+}
+
+fn noll writeToPort(int port, string output) {
+    low {
+        REG_LOAD port %r3;
+        syscall "writeToLocalPort" port output;
+    }
 }
