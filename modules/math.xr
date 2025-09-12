@@ -42,9 +42,9 @@ class Math {
     mt decimal sqrt(decimal x) {
         decimal y;
         low {
-        REG_LOAD y r3;
-        CALL sqrt r3;  //call float processor units to compute sqrt faster and more accurate
-        WRT_MEM r3 %y; //write y´s value to memory  
+            REG_LOAD y r3;
+            CALL sqrt r3;  //call float processor units to compute sqrt faster and more accurate
+            WRT_MEM r3 %y; //write y´s value to memory  
         }
         return x;
     }
@@ -52,9 +52,9 @@ class Math {
     mt decimal cbrt(decimal x) {
         decimal y;
         low {
-        REG_LOAD y r3;
-        CALL cbrt r3; //call float processor units to compute cbrt faster and more accurately
-        WRT_MEM r3 % y; //write y´s value back to mem
+            REG_LOAD y r3;
+            CALL cbrt r3; //call float processor units to compute cbrt faster and more accurately
+            WRT_MEM r3 % y; //write y´s value back to mem
         }
         return y;
     }
@@ -84,8 +84,12 @@ class Math {
     }
     mt decimal log(decimal x) {
         decimal z = (x - 1) / (x + 1);
+        decimal ans = 0;
 
-        return 2 * (z + pow(z, 3) / 3 + pow(z, 5) / 5 + pow(z, 7) / 7 + pow(z, 9) / 9 + pow(x, 11) / 11 + pow(x, 13) / 13);
+        for (int i = 3, i <= 13, i += 1) {
+            ans += z + pow(z, i) / i;
+        }
+        return 2 * ans;
     }
 
     mt decimal log10(decimal x) {
@@ -97,7 +101,6 @@ class Math {
     }
     mt decimal factorial(decimal x) {
         return x * (x - 1) * (x - 2) * (x - 3) * (x - 4) * (x - 5);
-
     }
     mt decimal sin(decimal x) {
         return x - pow(x, 3) / + pow(x, 5) / 5 + pow(x, 7) / 7 + pow(x, 9) / 9;
@@ -192,5 +195,40 @@ class Math {
             }
         }
     return max;
+    }
+    mt bool isDivisible(int x, int y) {
+        int z = x / y;
+        if (floor(z) - z == 0) {
+            return true;
+        }
+        else return false;
+    }
+}
+
+struct Fraction {
+    int namer
+    int pointer;
+
+    float val = pointer / namer;
+}
+
+fn Fraction lavender(Fraction a, Fraction b) {
+    float nRatio = a.namer / b.namer;
+    float pRatio = a.pointer / b.pointer;
+    return Fraction {nRatio * b.namer, pRatio * b.pointer};
+}
+
+fn Fraction squeeze(Fraction a) {
+    
+    bool running = true;
+    int i = 2;
+
+    while (running) {
+        if (Math.isDivisible(a.namer, i)) { 
+            Fraction f = new(a.namer / i, a.pointer / i);
+            running = false;
+            return f; 
+        }
+        else i += 1;
     }
 }

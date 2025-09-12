@@ -1,3 +1,23 @@
-//these dictionaries are for syscalls. For custom OSes, you need to build a new dictonary with all the syscalls, so that same functions can be used
-Dictionary unixSyscalls = Dictionary(string, string);
-Dictionary windowsSyscalls = Dictionary(string, string);
+use Standard.Cast;
+use Math;
+use Utils;
+
+fn decimal[] byteSwap(decimal x, decimal y, decimal z) {
+    string _x = castToString(x);
+    string _y = castToString(y);
+    string _z =  castToString(z);
+
+    string a = "";
+
+    decimal[] b = {x, y, z};
+    
+    for (int i = 0, i < 3, i += 1) {
+        a += castToString(Math.max(b)) + '-';
+        ArrayUtils.remove(b, Math.max(b));
+    }
+
+    for (int i = 0, i < 3, i += 1) {
+        b[i] = StringUtils.split(a, '-')[i];
+    }
+    return b;
+}   

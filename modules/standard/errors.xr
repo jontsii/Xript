@@ -17,7 +17,7 @@ class Error { //base class for errors
         writeLn(e.errorId + '\n' + '\n' + e.name + '\n' + '\n' + e.msg);
         os.exit(1);
         else {
-            Error e = new(d"Incorrect type used in method \"Error.throw\". Cannot throw an error with type {error.type}.");
+            Error e = new("TypeError", "RNT0001", d"Incorrect type used in method 'Error.throw\'. Cannot throw an error with type {error.type}.");
             Error.throw(e);
         }
     }

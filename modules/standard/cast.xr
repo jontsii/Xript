@@ -1,6 +1,7 @@
 use RamManager;
 use Utils;
 use Compiler;
+use Errors;
 
 class ObjData { //this class is the base for all objects and has info about them
     
@@ -8,6 +9,7 @@ class ObjData { //this class is the base for all objects and has info about them
     int instanceNum;
     int objNum;
     string[] fields;
+    any[] properties;
     Type[] parents;
 
     mt bool inheritsFrom(Type cls) {
@@ -21,6 +23,7 @@ class ObjData { //this class is the base for all objects and has info about them
     }
 }
 
+
 fn string castToString(any var) {
     Compiler.typeTable.modify(var.name, string);
     return var;
@@ -30,7 +33,10 @@ fn int castToInt(any var) {
         Compiler.typeTable.modify(var.name, int);
         return var;
     }
-    else //throw an error
+    else {
+        Error e = new("TypeError", "RNT0001", d"cannot cast type '{Type.typeof(var)}' to type 'int'");
+        Error.throw();
+    }
 }
 fn float castToFloat16(any var) {
     string s = castToString(var);
