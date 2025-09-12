@@ -1,3 +1,5 @@
+use Utils;
+
 #ct agnostic
 any* console = getConsole();
 
@@ -9,4 +11,27 @@ fn noll writeLn(string msg) {
 fn string readLn() {
     #ct agnostic
     return readConsole(console);
+}
+
+static class File {
+    mt string readFile(string path) {
+        #ct agnostic
+        return readFileFromOs(path);
+    }
+    mt string[] readLines(string path) {
+        string s = readFile(path);
+        return StringUtils.split(s, '\n');
+    }
+    mt noll writeFile(string path, string data) {
+        #ct agnostic
+        writeFileToOs(path, data)
+    }
+    mt noll copyFile(string src, string dest) {
+        string s = readFile(src);
+        writeFile(dest, s);
+    }
+    mt noll deleteFile(string path) {
+        #ct agnostic
+        deleteFileFromOs(path);
+    }
 }
